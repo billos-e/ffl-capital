@@ -1,0 +1,40 @@
+2026-08-10T13:38:51.479Z     at async y (.next/server/app/admin/(dashboard)/partners/[id]/page.js:2:77944) {
+2026-08-10T13:38:51.479Z The column `transactions.acknowledged_at` does not exist in the current database.
+2026-08-10T13:38:51.479Z }
+2026-08-10T13:38:51.479Z   clientVersion: '6.19.3',
+2026-08-10T13:38:51.479Z   code: 'P2022',
+2026-08-10T13:38:51.479Z   digest: '2485561430'
+2026-08-10T13:38:51.479Z   meta: [Object],
+2026-08-10T13:38:51.479Z Invalid `prisma.partner.findUnique()` invocation:
+2026-08-10T13:38:51.479Z  ⨯ Error [PrismaClientKnownRequestError]: 
+2026-08-10T13:41:03.259Z The column `beneficiary_type` does not exist in the current database.
+2026-08-10T13:41:03.259Z [intake] error: 
+2026-08-10T13:41:03.259Z Invalid `prisma.lead.create()` invocation:
+2026-08-10T13:42:13.222Z   meta: [Object],
+2026-08-10T13:42:13.222Z     at async x (.next/server/app/admin/(dashboard)/leads/page.js:2:12534) {
+2026-08-10T13:42:13.222Z The column `leads.beneficiary_type` does not exist in the current database.
+2026-08-10T13:42:13.222Z }
+2026-08-10T13:42:13.222Z Invalid `prisma.lead.findMany()` invocation:
+2026-08-10T13:42:13.222Z   digest: '42191551'
+2026-08-10T13:42:13.222Z   clientVersion: '6.19.3',
+2026-08-10T13:42:13.222Z  ⨯ Error [PrismaClientKnownRequestError]: 
+2026-08-10T13:42:16.926Z Invalid `prisma.lead.findUnique()` invocation:
+2026-08-10T13:42:19.461Z   digest: '42191551'
+2026-08-10T13:42:19.461Z  ⨯ Error [PrismaClientKnownRequestError]: 
+2026-08-10T13:42:19.461Z     at async x (.next/server/app/admin/(dashboard)/leads/page.js:2:12534) {
+2026-08-10T13:42:19.461Z   clientVersion: '6.19.3',
+2026-08-10T13:42:19.461Z   code: 'P2022',
+2026-08-10T13:42:19.461Z }
+2026-08-10T13:42:19.461Z The column `leads.beneficiary_type` does not exist in the current database.
+2026-08-10T13:42:19.461Z Invalid `prisma.lead.findMany()` invocation:
+2026-08-10T13:42:19.461Z   meta: [Object],
+2026-08-10T13:42:27.732Z   digest: '20015901'
+2026-08-10T13:42:27.732Z Invalid `prisma.lead.findMany()` invocation:
+2026-08-10T13:42:27.732Z   meta: [Object],
+2026-08-10T13:42:27.732Z  ⨯ Error [PrismaClientKnownRequestError]: 
+2026-08-10T13:42:27.732Z     at async i (.next/server/app/admin/(dashboard)/page.js:1:6916) {
+2026-08-10T13:42:27.732Z   clientVersion: '6.19.3',
+2026-08-10T13:42:27.732Z The column `leads.beneficiary_type` does not exist in the current database.
+2026-08-10T13:42:27.732Z     at async i (.next/server/app/api/admin/dashboard/route.js:1:775)
+2026-08-10T13:42:27.732Z   code: 'P2022',
+2026-08-10T13:42:27.732Z }
