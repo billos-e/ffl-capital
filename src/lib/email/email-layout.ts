@@ -163,7 +163,7 @@ ${PARTNER_EMAIL_FONT_LINK}
           <tr>
             <td style="padding:28px 28px 36px">
               <p style="margin:0 0 24px;font-family:${PARTNER_EMAIL_FONT_STACK};font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:#64748b">
-                FFL Capital · Partner Portal
+                Capital Lead Solutions · Partner Portal
               </p>
               ${titleBlock}
               <div style="font-family:${PARTNER_EMAIL_FONT_STACK};font-size:15px;line-height:1.55;color:#0f172a">

@@ -87,7 +87,7 @@ export function PartnerContactView() {
     <div>
       <PageHeader
         title="Contact Us"
-        subtitle="Send a message to the FFL Capital support team"
+        subtitle="Send a message to the Capital Lead Solutions support team"
       />
 
       <form onSubmit={handleSubmit} className="card p-6 sm:p-8">

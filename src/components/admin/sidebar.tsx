@@ -90,7 +90,7 @@ export function AdminSidebar() {
         >
           <div className="min-w-0 flex-1 flex-col">
             <span className="truncate text-sm font-semibold leading-tight text-slate-800">
-              FFL Capital
+              Capital Lead Solutions
             </span>
             <span className="block text-[11px] font-medium leading-tight text-sidebar-heading">
               Admin Portal

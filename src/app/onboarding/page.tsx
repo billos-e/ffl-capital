@@ -39,7 +39,7 @@ export default async function OnboardingPage() {
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-700">
             <Lightning size={14} className="text-white" />
           </div>
-          <span className="text-sm font-bold text-brand-800">FFL Capital</span>
+          <span className="text-sm font-bold text-brand-800">Capital Lead Solutions</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-slate-500">Signed in</span>

@@ -47,7 +47,7 @@ export default async function SignInPage() {
               <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-700">
                 <Lightning size={20} className="text-white" />
               </div>
-              <p className="text-sm font-bold text-slate-900">FFL Capital</p>
+              <p className="text-sm font-bold text-slate-900">Capital Lead Solutions</p>
             </Link>
           </div>
 

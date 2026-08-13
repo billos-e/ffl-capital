@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
           currency: "usd",
           unit_amount: amountCents,
           product_data: {
-            name: "FFL Capital Wallet Top-Up",
+            name: "Capital Lead Solutions Wallet Top-Up",
             description: "One-time wallet credit for lead purchases",
           },
         },

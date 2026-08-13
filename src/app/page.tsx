@@ -125,7 +125,7 @@ export default async function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-100 py-6 text-center text-xs text-slate-400">
-        © 2026 FFL Capital · Internal Platform · Powered by TECHMA
+        © 2026 Capital Lead Solutions · Internal Platform · Powered by TECHMA
       </footer>
     </div>
   );

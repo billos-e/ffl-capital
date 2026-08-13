@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
           unit_amount: amountCents,
           recurring: { interval: "week" },
           product_data: {
-            name: "FFL Capital Weekly Auto-Recharge",
+            name: "Capital Lead Solutions Weekly Auto-Recharge",
           },
         },
         quantity: 1,

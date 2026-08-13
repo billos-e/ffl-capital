@@ -16,8 +16,8 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "FFL Capital — Lead Distribution",
-  description: "Internal lead distribution platform for FFL Capital",
+  title: "Capital Lead Solutions — Lead Distribution",
+  description: "Internal lead distribution platform for Capital Lead Solutions",
 };
 
 export default function RootLayout({

@@ -231,7 +231,7 @@ const STEP_TITLES = [
 
 const STEP_DESCS = [
   "Turn on outbound POST and tell us where matched leads should go.",
-  "Choose how we prove each POST comes from FFL Capital. Your secret is encrypted and never shown again.",
+  "Choose how we prove each POST comes from Capital Lead Solutions. Your secret is encrypted and never shown again.",
   "Tell us which key each piece of lead data uses in your CRM.",
   "Choose how we decide your CRM accepted a lead. All enabled checks must pass.",
   "Confirm the setup, then send a synthetic lead to your endpoint.",
