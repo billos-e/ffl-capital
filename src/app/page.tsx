@@ -76,7 +76,7 @@ export default async function HomePage() {
                 icon: TrendUp,
                 color: "bg-emerald-50 text-emerald-600",
                 title: "Aged Lead Marketplace",
-                desc: "Self-service marketplace for leads 30+ days old at just $5 each. No admin required.",
+                desc: "Self-service marketplace for leads 30+ days old starting at just $5 each. No admin required.",
               },
               {
                 icon: Shield,
