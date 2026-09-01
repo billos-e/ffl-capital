@@ -94,7 +94,7 @@ export default async function HomePage() {
                 icon: CheckCircle,
                 color: "bg-amber-50 text-amber-600",
                 title: "Refund Workflow",
-                desc: "In-app refund requests for out of service phone numbers only. Partners are given a 15% refund rate each order for out of service numbers. ",
+                desc: "In-app refund requests for out of service phone numbers only. Partners are given a 15% refund rate each Realtime order for out of service numbers. ",
               },
             ].map((f) => (
               <div key={f.title} className="card p-5">
