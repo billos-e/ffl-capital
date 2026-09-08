@@ -4,3 +4,4 @@
 - [Replit-managed Clerk: CNAME vs Proxy](replit-managed-clerk-no-manual-proxy.md) — usually don't hand-roll a Clerk proxy, but if the CNAME FAPI subdomain 502s persistently, Clerk's official Proxy method (Next 15+/Clerk v7 `frontendApiProxy`) is the supported fix.
 - [Porting a diverged feature branch by hand](hand-porting-diverged-branch.md) — when a branch predates a main-line migration (e.g. Next.js 15 async params), read each commit's diff and reapply logic manually instead of merging/cherry-picking.
 - [Clerk invitation ticket flow](clerk-invitation-ticket-flow.md) — invitation redirectUrl must point to a page rendering `<SignUp>` (public in middleware), not `<SignIn>`, or invitees never see the create-account form.
+- [Local publish commit cleanup](local-publish-commit-cleanup.md) — remove unpushed empty publish commits by rebuilding from the remote base and replaying only real local commits.
