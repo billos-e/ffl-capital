@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { DeliveryChannel } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getPartnerId } from "@/lib/partner/session";
 import { PartnerAgedView } from "@/components/partner/partner-aged";
@@ -49,8 +50,15 @@ export default async function PartnerAgedPage({
       ? { AND: [agedWhere, { leadType: { in: partnerTypes } }] }
       : { AND: [agedWhere, { id: { in: [] } }] };
 
-  const [agedLeads, totalEligible, fallbackPrice, agedDays, tiers, categories] =
-    await Promise.all([
+  const [
+    agedLeads,
+    totalEligible,
+    fallbackPrice,
+    agedDays,
+    tiers,
+    categories,
+    purchasedAgedDeliveries,
+  ] = await Promise.all([
       prisma.lead.findMany({
         where: marketplaceWhere,
         orderBy: { receivedAt: "asc" },
@@ -61,8 +69,18 @@ export default async function PartnerAgedPage({
       getAgedDaysThreshold(),
       getAgedPriceTiers(),
       loadPartnerAvailableCategoryLabels(),
+      prisma.leadDelivery.findMany({
+        where: {
+          partnerId,
+          channel: DeliveryChannel.aged,
+        },
+        select: { leadId: true },
+      }),
     ]);
 
+  const purchasedAgedLeadIds = new Set(
+    purchasedAgedDeliveries.map((delivery) => delivery.leadId),
+  );
   const knownTypes = categories.map((category) => category.type);
   const typeFilterOptions = buildAdminAgedTypeFilterOptions(categories);
   const ageFilterOptions = buildAgedAgeFilterOptions(tiers);
@@ -81,7 +99,7 @@ export default async function PartnerAgedPage({
           firstName: lead.firstName,
           lastName: lead.lastName,
           email: lead.email,
-          phone: lead.phone,
+          ...(purchasedAgedLeadIds.has(lead.id) ? { phone: lead.phone } : {}),
           address: lead.address,
           city: lead.city,
           state: lead.state,

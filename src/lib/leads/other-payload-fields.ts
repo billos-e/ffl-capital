@@ -168,6 +168,24 @@ function topLevelKey(path: string): string {
   return dot === -1 ? path : path.slice(0, dot);
 }
 
+function isPhoneLikePayloadKey(path: string): boolean {
+  return path.split(".").some((segment) => {
+    const normalized = segment.replace(/[^a-z0-9]/gi, "").toLowerCase();
+    return (
+      normalized === "phone" ||
+      normalized === "telephone" ||
+      normalized === "mobile" ||
+      normalized === "cell" ||
+      normalized.startsWith("phone") ||
+      normalized.startsWith("telephone") ||
+      normalized.startsWith("mobile") ||
+      normalized.endsWith("phone") ||
+      normalized.endsWith("telephone") ||
+      normalized.endsWith("mobile")
+    );
+  });
+}
+
 export function extractOtherPayloadFields(
   rawPayload: unknown,
   options?: { omitKeys?: Iterable<string> },
@@ -183,6 +201,7 @@ export function extractOtherPayloadFields(
   const fields: OtherPayloadField[] = [];
   for (const { key, value } of flattenEntries(rawPayload)) {
     const root = topLevelKey(key);
+    if (isPhoneLikePayloadKey(key)) continue;
     if (CURATED_PAYLOAD_KEYS.has(root.toLowerCase())) continue;
     if (extraOmit.has(root.toLowerCase()) || extraOmit.has(key.toLowerCase())) {
       continue;

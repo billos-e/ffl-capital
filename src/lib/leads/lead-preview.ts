@@ -12,7 +12,8 @@ export type LeadPreviewModel = {
   firstName: string;
   lastName: string;
   email: string | null;
-  phone: string | null;
+  /** Omitted from pre-purchase aged marketplace payloads. */
+  phone?: string | null;
   address: string | null;
   city: string | null;
   state: string;

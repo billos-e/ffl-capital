@@ -191,11 +191,13 @@ export function LeadPreviewSheet({
         </div>
 
         <PreviewSection title="Contact">
-          <PreviewFieldRow
-            label="Phone"
-            value={lead.phone}
-            href={lead.phone ? `tel:${lead.phone}` : undefined}
-          />
+          {lead.phone ? (
+            <PreviewFieldRow
+              label="Phone"
+              value={lead.phone}
+              href={`tel:${lead.phone}`}
+            />
+          ) : null}
           <PreviewFieldRow label="Address" value={lead.address} />
           <PreviewFieldRow label="City" value={lead.city} />
           <PreviewFieldRow

@@ -71,6 +71,28 @@ describe("extractOtherPayloadFields", () => {
     );
   });
 
+  test("omits phone fields, including common aliases and nested values", () => {
+    const fields = extractOtherPayloadFields({
+      phone_number: "555-0100",
+      telephoneNumber: "555-0101",
+      mobilePhone: "555-0102",
+      contact: {
+        primary_phone: "555-0103",
+        phone_type: "mobile",
+      },
+      Preferred_Contact_Method: "phone",
+      Notes: "Keep this note",
+    });
+
+    assert.deepEqual(
+      fields.map((field) => ({ label: field.label, value: field.value })),
+      [
+        { label: "Preferred Contact Method", value: "phone" },
+        { label: "Notes", value: "Keep this note" },
+      ],
+    );
+  });
+
   test("returns empty for non-object payloads", () => {
     assert.deepEqual(extractOtherPayloadFields(null), []);
     assert.deepEqual(extractOtherPayloadFields("x"), []);
