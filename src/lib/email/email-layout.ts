@@ -64,10 +64,17 @@ function originFromReplitDomains(): string | null {
 
 /**
  * Resolve the public app origin for absolute email / redirect links.
- * Prefer NEXT_PUBLIC_APP_URL when set and non-loopback; then REPLIT_DOMAINS;
- * then an explicit origin only if it is not loopback; finally local-dev fallback.
+ * Prefer an explicit non-loopback request origin when available so redirects
+ * return to the hostname the user is currently using. Fall back to
+ * NEXT_PUBLIC_APP_URL, then REPLIT_DOMAINS, then local development.
  */
 export function resolveAppOrigin(explicitOrigin?: string | null): string {
+  const fromExplicit = explicitOrigin?.trim();
+  if (fromExplicit) {
+    const normalized = stripTrailingSlash(fromExplicit);
+    if (!isLoopbackOrigin(normalized)) return normalized;
+  }
+
   const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim();
   if (fromEnv) {
     const normalized = stripTrailingSlash(fromEnv);
@@ -76,12 +83,6 @@ export function resolveAppOrigin(explicitOrigin?: string | null): string {
 
   const fromReplit = originFromReplitDomains();
   if (fromReplit) return stripTrailingSlash(fromReplit);
-
-  const fromExplicit = explicitOrigin?.trim();
-  if (fromExplicit) {
-    const normalized = stripTrailingSlash(fromExplicit);
-    if (!isLoopbackOrigin(normalized)) return normalized;
-  }
 
   return "http://localhost:3000";
 }

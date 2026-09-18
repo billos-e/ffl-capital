@@ -72,5 +72,10 @@ export async function POST(request: NextRequest) {
     ok: true,
     purchasedCount: result.purchasedCount,
     failedCount: result.failedCount,
+    purchased: result.purchased.map((lead) => ({
+      leadId: lead.leadId,
+      firstName: lead.firstName,
+      lastName: lead.lastName,
+    })),
   });
 }

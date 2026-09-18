@@ -147,7 +147,11 @@ export function PartnerAgedView({
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error ?? "Could not complete purchase");
         if (cancelled) return;
-        notify.success("Aged leads purchased. They will appear in your leads shortly.");
+        setPurchaseSuccess({
+          leads: Array.isArray(data.purchased) ? data.purchased : [],
+          totalCount:
+            typeof data.purchasedCount === "number" ? data.purchasedCount : 0,
+        });
         window.history.replaceState(null, "", "/partner/aged");
         router.refresh();
       })

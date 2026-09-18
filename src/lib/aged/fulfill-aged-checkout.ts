@@ -14,7 +14,12 @@ export type AgedCheckoutFulfillment = {
   failedCount: number;
   alreadyPaid: boolean;
   deliveryIds: string[];
-  purchased: Array<{ leadId: string; deliveryId: string }>;
+  purchased: Array<{
+    leadId: string;
+    deliveryId: string;
+    firstName: string;
+    lastName: string;
+  }>;
   partnerId: string;
 };
 
@@ -28,6 +33,16 @@ export async function fulfillAgedCheckout(input: {
   const deliver = input.deliver ?? !input.tx;
 
   const run = async (tx: TxClient): Promise<AgedCheckoutFulfillment> => {
+    // The browser return and Stripe webhook can finalize the same checkout at
+    // nearly the same time. Serialize those attempts so both cannot observe a
+    // pending checkout and create duplicate deliveries.
+    await tx.$queryRaw<{ id: string }[]>`
+      SELECT "id"
+      FROM "aged_checkouts"
+      WHERE "id" = CAST(${input.checkoutId} AS uuid)
+      FOR UPDATE
+    `;
+
     const checkout = await tx.agedCheckout.findUnique({
       where: { id: input.checkoutId },
     });
@@ -71,6 +86,8 @@ export async function fulfillAgedCheckout(input: {
       purchased: result.purchased.map((row) => ({
         leadId: row.leadId,
         deliveryId: row.deliveryId,
+        firstName: row.firstName,
+        lastName: row.lastName,
       })),
       partnerId: checkout.partnerId,
     };

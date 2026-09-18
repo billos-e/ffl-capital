@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       partnerId: authResult.partner.id,
       partnerEmail: authResult.partner.email,
       leadIds: parsed.data.leadIds,
-      originHeader: request.headers.get("origin"),
+      originHeader: request.nextUrl.origin,
     });
     return NextResponse.json({ url: result.url, checkoutId: result.checkoutId });
   } catch (error) {

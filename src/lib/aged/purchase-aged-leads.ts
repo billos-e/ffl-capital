@@ -121,6 +121,19 @@ async function purchaseSingleAgedLead(
       },
     });
 
+    // A single Stripe PaymentIntent can cover several aged leads. Keep the
+    // external payment reference on the first ledger row only because the
+    // column is intentionally unique for webhook idempotency on wallet
+    // payments. Every lead still gets its own transaction and delivery row.
+    let paymentIntentId = options?.stripePaymentIntentId;
+    if (paymentIntentId) {
+      const existingPayment = await tx.transaction.findFirst({
+        where: { stripePaymentIntentId: paymentIntentId },
+        select: { id: true },
+      });
+      if (existingPayment) paymentIntentId = undefined;
+    }
+
     await recordNonWalletTransaction(
       partnerId,
       -agedPrice,
@@ -128,7 +141,7 @@ async function purchaseSingleAgedLead(
       {
         tx,
         leadDeliveryId: delivery.id,
-        stripePaymentIntentId: options?.stripePaymentIntentId,
+        stripePaymentIntentId: paymentIntentId,
         description: `Aged lead purchase: ${lead.state}`,
       },
     );
