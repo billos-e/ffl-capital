@@ -423,6 +423,8 @@ model Transaction {
   amount                Decimal         @db.Decimal(10, 2)
   balanceAfter          Decimal         @map("balance_after") @db.Decimal(10, 2)
   stripePaymentIntentId String?         @unique @map("stripe_payment_intent_id")
+  stripeRefundId        String?         @unique @map("stripe_refund_id")
+  stripeRefundPaymentIntentId String?   @map("stripe_refund_payment_intent_id")
   leadDeliveryId        String?         @map("lead_delivery_id") @db.Uuid
   description           String?
   acknowledgedAt        DateTime?       @map("acknowledged_at")
@@ -432,6 +434,7 @@ model Transaction {
   leadDelivery LeadDelivery? @relation(fields: [leadDeliveryId], references: [id])
 
   @@index([partnerId])
+  @@index([stripeRefundPaymentIntentId])
   @@map("transactions")
 }
 

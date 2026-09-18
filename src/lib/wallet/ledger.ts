@@ -9,7 +9,10 @@ export interface LedgerEntryInput {
   amount: number;
   description?: string;
   stripePaymentIntentId?: string;
+  stripeRefundId?: string;
+  stripeRefundPaymentIntentId?: string;
   leadDeliveryId?: string;
+  allowNegativeBalance?: boolean;
   tx?: TxClient;
 }
 
@@ -25,7 +28,7 @@ export async function recordLedgerEntry(input: LedgerEntryInput) {
     });
 
     const newBalance = Number(updated.walletBalance);
-    if (newBalance < 0) {
+    if (newBalance < 0 && !input.allowNegativeBalance) {
       throw new Error("Insufficient wallet balance");
     }
 
@@ -37,6 +40,8 @@ export async function recordLedgerEntry(input: LedgerEntryInput) {
         balanceAfter: newBalance,
         description: input.description,
         stripePaymentIntentId: input.stripePaymentIntentId,
+        stripeRefundId: input.stripeRefundId,
+        stripeRefundPaymentIntentId: input.stripeRefundPaymentIntentId,
         leadDeliveryId: input.leadDeliveryId,
       },
     });

@@ -10,6 +10,7 @@ import {
   expireAgedCheckoutByStripeSession,
   fulfillAgedCheckout,
 } from "@/lib/aged/fulfill-aged-checkout";
+import { applyStripeTopupRefund } from "@/lib/stripe/apply-stripe-topup-refund";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -34,10 +35,18 @@ function paymentIntentIdFromInvoice(invoice: Stripe.Invoice): string | undefined
   return paymentIntentIdFrom(raw.payment_intent);
 }
 
-function isUniqueViolation(error: unknown): boolean {
-  return (
-    error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002"
-  );
+function isUniqueViolation(error: unknown, field?: string): boolean {
+  if (
+    !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+    error.code !== "P2002"
+  ) {
+    return false;
+  }
+
+  if (!field) return true;
+
+  const target = error.meta?.target;
+  return Array.isArray(target) ? target.includes(field) : target === field;
 }
 
 async function creditWalletOnce(
@@ -220,6 +229,10 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      if (event.type === "refund.created" || event.type === "refund.updated") {
+        await applyStripeTopupRefund(event.data.object as Stripe.Refund, tx);
+      }
+
       if (event.type === "customer.subscription.deleted") {
         const subscription = event.data.object as Stripe.Subscription;
         await tx.billingRecurrence.updateMany({
@@ -233,6 +246,13 @@ export async function POST(request: NextRequest) {
       await deliverAgedCheckoutPurchases(agedBox.current);
     }
   } catch (error) {
+    // Two Stripe events for the same refund can be processed concurrently.
+    // The unique refund id makes the second insert fail after the first one
+    // has committed; that is an idempotent success, not a webhook failure.
+    if (isUniqueViolation(error, "stripe_refund_id")) {
+      return NextResponse.json({ received: true });
+    }
+
     console.error("Stripe webhook processing failed:", error);
     return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
   }
