@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { AgedCheckoutStatus } from "@prisma/client";
 import { requirePartner } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { getStripe, isStripeConfigured } from "@/lib/stripe/client";
@@ -56,9 +55,6 @@ export async function POST(request: NextRequest) {
   });
   if (!checkout || checkout.partnerId !== authResult.partner.id) {
     return NextResponse.json({ error: "Checkout not found" }, { status: 404 });
-  }
-  if (checkout.status === AgedCheckoutStatus.paid) {
-    return NextResponse.json({ ok: true, alreadyPaid: true });
   }
 
   const paymentIntentId = paymentIntentIdFrom(session.payment_intent);

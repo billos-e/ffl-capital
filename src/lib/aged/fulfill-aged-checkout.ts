@@ -1,4 +1,9 @@
-import { AgedCheckoutStatus, LeadEventType } from "@prisma/client";
+import {
+  AgedCheckoutStatus,
+  DeliveryChannel,
+  LeadEventType,
+  TransactionType,
+} from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { PRISMA_TX_OPTIONS } from "@/lib/db-transaction";
@@ -8,6 +13,50 @@ import { purchaseAgedLeads } from "@/lib/aged/purchase-aged-leads";
 import { releaseAgedCheckoutHold } from "@/lib/aged/create-aged-checkout";
 
 type TxClient = Prisma.TransactionClient;
+
+async function getCompletedAgedPurchases(
+  tx: TxClient,
+  checkout: {
+    id: string;
+    partnerId: string;
+    leadIds: string[];
+    createdAt: Date;
+    updatedAt: Date;
+  },
+) {
+  const deliveries = await tx.leadDelivery.findMany({
+    where: {
+      partnerId: checkout.partnerId,
+      leadId: { in: checkout.leadIds },
+      channel: DeliveryChannel.aged,
+      createdAt: {
+        gte: checkout.createdAt,
+        lte: checkout.updatedAt,
+      },
+      transactions: {
+        some: { type: TransactionType.aged_purchase },
+      },
+    },
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      leadId: true,
+      lead: {
+        select: {
+          firstName: true,
+          lastName: true,
+        },
+      },
+    },
+  });
+
+  return deliveries.map((delivery) => ({
+    leadId: delivery.leadId,
+    deliveryId: delivery.id,
+    firstName: delivery.lead.firstName,
+    lastName: delivery.lead.lastName,
+  }));
+}
 
 export type AgedCheckoutFulfillment = {
   purchasedCount: number;
@@ -53,12 +102,13 @@ export async function fulfillAgedCheckout(input: {
       throw new Error("Aged checkout partner mismatch");
     }
     if (checkout.status === AgedCheckoutStatus.paid) {
+      const purchased = await getCompletedAgedPurchases(tx, checkout);
       return {
-        purchasedCount: 0,
+        purchasedCount: purchased.length,
         failedCount: 0,
         alreadyPaid: true,
         deliveryIds: [],
-        purchased: [],
+        purchased,
         partnerId: checkout.partnerId,
       };
     }
