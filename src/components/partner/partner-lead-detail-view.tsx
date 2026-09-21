@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { LeadCategoryBadge } from "@/components/leads/lead-category-badge";
 import { PartnerRefundButton } from "@/components/partner/partner-refund-button";
 import { PartnerMarkSoldButton } from "@/components/partner/partner-mark-sold-button";
+import { isPartnerRefundAllowed } from "@/lib/refunds/eligibility";
 import { formatDateTimeLong } from "@/lib/format-datetime";
 import {
   LeadDetailCompliancePanel,
@@ -81,6 +82,7 @@ export function PartnerLeadDetailView({
   ].filter(Boolean);
 
   const channelBadgeLabel = channel === "realtime" ? "Real-time" : "Aged";
+  const partnerRefundable = isPartnerRefundAllowed(channel) && refundable;
   const trustedFormLabel = lead.trustedformCertUrl
     ? trustedFormCertified
       ? "Certified"
@@ -140,7 +142,7 @@ export function PartnerLeadDetailView({
             <LeadDetailKpiTile label="Channel" value={channelBadgeLabel} />
             <LeadDetailKpiTile
               label="Refundable"
-              value={refundable && !isRefunded ? "Yes" : "No"}
+              value={partnerRefundable && !isRefunded ? "Yes" : "No"}
             />
             <LeadDetailKpiTile
               label="TrustedForm"

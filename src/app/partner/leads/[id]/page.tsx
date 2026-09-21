@@ -11,6 +11,7 @@ import {
 import { formatUsd } from "@/lib/format-money";
 import { formatDateTimeLong } from "@/lib/format-datetime";
 import { canPartnerMarkAgedLeadAsSold } from "@/lib/aged/partner-mark-sold";
+import { isPartnerRefundAllowed } from "@/lib/refunds/eligibility";
 
 export default async function PartnerLeadDetailPage({
   params,
@@ -35,7 +36,11 @@ export default async function PartnerLeadDetailPage({
   const lead = delivery.lead;
   const refundReq = delivery.refundRequests[0] ?? null;
   const isRefunded = !!delivery.refundedAt;
-  const canRefund = lead.refundable && !isRefunded && !refundReq;
+  const canRefund =
+    isPartnerRefundAllowed(delivery.channel) &&
+    lead.refundable &&
+    !isRefunded &&
+    !refundReq;
   const canMarkSold = canPartnerMarkAgedLeadAsSold({
     channel: delivery.channel,
     partnerSoldAt: delivery.partnerSoldAt,

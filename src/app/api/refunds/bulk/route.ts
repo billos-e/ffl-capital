@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requirePartner } from "@/lib/auth/session";
+import { isPartnerRefundAllowed } from "@/lib/refunds/eligibility";
 
 const bulkSchema = z.object({
   requests: z
@@ -40,6 +41,13 @@ export async function POST(request: NextRequest) {
 
       if (!delivery || delivery.partnerId !== authResult.partner.id) {
         errors.push({ leadDeliveryId: req.leadDeliveryId, error: "Not found" });
+        continue;
+      }
+      if (!isPartnerRefundAllowed(delivery.channel)) {
+        errors.push({
+          leadDeliveryId: req.leadDeliveryId,
+          error: "Aged leads are not refundable by partners",
+        });
         continue;
       }
       if (delivery.refundedAt) {

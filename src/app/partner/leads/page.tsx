@@ -38,6 +38,7 @@ import {
   leadViewDraftsEqual,
   parseLeadViewDraft,
 } from "@/lib/leads/lead-view-draft";
+import { isPartnerRefundAllowed } from "@/lib/refunds/eligibility";
 
 const BASE_PATH = "/partner/leads";
 
@@ -191,7 +192,11 @@ export default async function PartnerLeadsPage({
         deliveries={deliveries.map((d) => {
           const refundReq = d.refundRequests[0];
           const isRefunded = !!d.refundedAt;
-          const canRefund = d.lead.refundable && !isRefunded && !refundReq;
+          const canRefund =
+            isPartnerRefundAllowed(d.channel) &&
+            d.lead.refundable &&
+            !isRefunded &&
+            !refundReq;
           return {
             id: d.id,
             price: Number(d.price),

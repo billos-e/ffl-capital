@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requirePartner } from "@/lib/auth/session";
+import { isPartnerRefundAllowed } from "@/lib/refunds/eligibility";
 
 const refundSchema = z.object({
   leadDeliveryId: z.string().uuid(),
@@ -28,6 +29,12 @@ export async function POST(request: NextRequest) {
 
   if (!delivery || delivery.partnerId !== authResult.partner.id) {
     return NextResponse.json({ error: "Delivery not found" }, { status: 404 });
+  }
+  if (!isPartnerRefundAllowed(delivery.channel)) {
+    return NextResponse.json(
+      { error: "Aged leads are not refundable by partners" },
+      { status: 400 },
+    );
   }
   if (delivery.refundedAt) {
     return NextResponse.json({ error: "Already refunded" }, { status: 400 });
