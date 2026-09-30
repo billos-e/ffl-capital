@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback, type Dispatch, type SetStateAction } from "react";
 import { PortalAnchoredMenuContent } from "@/components/ui/portal-anchored-menu-content";
 import { usePortalAnchoredMenu } from "@/hooks/use-portal-anchored-menu";
 import { useRouter } from "next/navigation";
@@ -26,6 +26,7 @@ import {
   type PortalDataTableLayout,
 } from "@/components/ui/portal-data-table";
 import { RefundRequestModal } from "@/components/refunds/refund-request-modal";
+import { MAX_PARTNER_LEAD_DOWNLOADS } from "@/lib/leads/partner-lead-download-constants";
 
 type DeliveryRow = {
   id: string;
@@ -167,6 +168,11 @@ export function PartnerLeadsTable({
   columns,
   sort,
   layout = "cards",
+  selected,
+  setSelected,
+  downloadPending,
+  downloadError,
+  setDownloadError,
   tableFooter,
 }: {
   deliveries: DeliveryRow[];
@@ -177,57 +183,78 @@ export function PartnerLeadsTable({
     hrefBySortKey: Record<string, string>;
   };
   layout?: PortalDataTableLayout;
+  selected: Set<string>;
+  setSelected: Dispatch<SetStateAction<Set<string>>>;
+  downloadPending: boolean;
+  downloadError: string | null;
+  setDownloadError: Dispatch<SetStateAction<string | null>>;
   tableFooter?: React.ReactNode;
 }) {
   const { push, router } = useNavigateWithPending();
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [pending, setPending] = useState(false);
   const [bulkRefundOpen, setBulkRefundOpen] = useState(false);
   const [refundDialogId, setRefundDialogId] = useState<string | null>(null);
 
   const refundable = deliveries.filter((d) => d.canRefund);
   const refundableSelected = refundable.filter((d) => selected.has(d.id));
-  const selectAllChecked =
-    refundable.length > 0 && selected.size === refundable.length;
+  const pageIds = deliveries.map((delivery) => delivery.id);
+  const allPageSelected =
+    pageIds.length > 0 && pageIds.every((id) => selected.has(id));
+  const selectedOnPage = deliveries.filter((delivery) => selected.has(delivery.id));
 
   const toggleAll = useCallback(() => {
-    if (selected.size === refundable.length) setSelected(new Set());
-    else setSelected(new Set(refundable.map((d) => d.id)));
-  }, [refundable, selected.size]);
+    setDownloadError(null);
+    if (allPageSelected) {
+      setSelected((previous) => {
+        const next = new Set(previous);
+        pageIds.forEach((id) => next.delete(id));
+        return next;
+      });
+      return;
+    }
+    const idsToAdd = pageIds.filter((id) => !selected.has(id));
+    if (selected.size + idsToAdd.length > MAX_PARTNER_LEAD_DOWNLOADS) {
+      setDownloadError(
+        `You can select up to ${MAX_PARTNER_LEAD_DOWNLOADS} leads per download.`,
+      );
+      return;
+    }
+    setSelected((previous) => new Set([...previous, ...idsToAdd]));
+  }, [allPageSelected, pageIds, selected, setDownloadError, setSelected]);
 
   const bulkRefundLabel =
     refundableSelected.length > 0
       ? `Report invalid (${refundableSelected.length})`
       : "Report invalid";
 
-  const headerColumns = useMemo(() => {
-    return columns.map((col) => {
-      if (col.key === "select") {
-        return {
-          ...col,
-          headerClassName: col.headerClassName ?? "w-10",
-          headerContent: (
-            <input
-              type="checkbox"
-              checked={selectAllChecked}
-              onChange={toggleAll}
-              className="rounded border-slate-300"
-              aria-label="Select all refundable leads"
-            />
-          ),
-        };
-      }
-      if (col.key === "actions") {
-        const hideActionsHeader =
-          layout === "cards" && selected.size === 0;
-        const baseHeaderClass = col.headerClassName ?? "w-12 text-right";
-        return {
-          ...col,
-          headerClassName: hideActionsHeader
-            ? `${baseHeaderClass} invisible`
-            : baseHeaderClass,
-          headerContent: hideActionsHeader ? null : (
-            <div className="flex justify-end">
+  const headerColumns = columns.map((col) => {
+    if (col.key === "select") {
+      return {
+        ...col,
+        headerClassName: col.headerClassName ?? "w-10",
+        headerContent: (
+          <input
+            type="checkbox"
+            checked={allPageSelected}
+            onChange={toggleAll}
+            disabled={downloadPending}
+            className="rounded border-slate-300"
+            aria-label="Select all leads on this page for download"
+          />
+        ),
+      };
+    }
+    if (col.key === "actions") {
+      const hideActionsHeader = layout === "cards" && selected.size === 0;
+      const baseHeaderClass = col.headerClassName ?? "w-12 text-right";
+      return {
+        ...col,
+        headerClassName: hideActionsHeader
+          ? `${baseHeaderClass} invisible`
+          : baseHeaderClass,
+        headerContent: hideActionsHeader ? null : (
+          <div className="flex justify-end">
+            {(layout === "table" || selectedOnPage.length > 0) && (
               <button
                 type="button"
                 disabled={!refundableSelected.length}
@@ -246,23 +273,22 @@ export function PartnerLeadsTable({
                   aria-hidden
                 />
               </button>
-            </div>
-          ),
-        };
-      }
-      return col;
-    });
-  }, [
-    columns,
-    layout,
-    selected.size,
-    selectAllChecked,
-    toggleAll,
-    bulkRefundLabel,
-    refundableSelected.length,
-  ]);
+            )}
+          </div>
+        ),
+      };
+    }
+    return col;
+  });
 
   function toggle(id: string) {
+    setDownloadError(null);
+    if (!selected.has(id) && selected.size >= MAX_PARTNER_LEAD_DOWNLOADS) {
+      setDownloadError(
+        `You can select up to ${MAX_PARTNER_LEAD_DOWNLOADS} leads per download.`,
+      );
+      return;
+    }
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -326,10 +352,11 @@ export function PartnerLeadsTable({
           >
             <input
               type="checkbox"
-              disabled={!d.canRefund}
               checked={selected.has(d.id)}
               onChange={() => toggle(d.id)}
-              className="rounded border-slate-300 disabled:opacity-30"
+              disabled={downloadPending}
+              className="rounded border-slate-300"
+              aria-label={`Select ${d.lead.firstName} ${d.lead.lastName} for download`}
             />
           </td>
         );
@@ -440,6 +467,11 @@ export function PartnerLeadsTable({
 
   return (
     <>
+      {downloadError && (
+        <p className="mb-3 text-sm font-medium text-red-600" role="alert">
+          {downloadError}
+        </p>
+      )}
       <PortalDataTable
         columns={headerColumns}
         sort={sort}

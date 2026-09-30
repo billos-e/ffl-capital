@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { FileText } from "@/lib/icons/client";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { PortalDataTableColumn } from "@/components/ui/portal-data-table";
@@ -13,6 +14,7 @@ import { usePortalDataTableLayout } from "@/hooks/use-portal-data-table-layout";
 import { PARTNER_LEADS_TABLE_LAYOUT_KEY } from "@/lib/partner/partner-leads-table-display";
 import type { LeadColumnDef } from "@/lib/leads/list-view-columns";
 import type { LeadViewEditorState } from "@/components/leads/lead-view-editor-sheet";
+import { MAX_PARTNER_LEAD_DOWNLOADS } from "@/lib/leads/partner-lead-download-constants";
 
 type ViewRecord = {
   id: string;
@@ -81,9 +83,84 @@ export function PartnerLeadsListClient({
   pagination?: React.ReactNode;
 }) {
   const { layout, setLayout } = usePortalDataTableLayout(PARTNER_LEADS_TABLE_LAYOUT_KEY);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [downloadPending, setDownloadPending] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  async function downloadSelected() {
+    if (!selected.size || downloadPending) return;
+    setDownloadPending(true);
+    setDownloadError(null);
+    try {
+      const response = await fetch("/api/partner/leads/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deliveryIds: [...selected] }),
+      });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(body?.error || "Could not download selected leads.");
+      }
+
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get("Content-Disposition") ?? "";
+      const filename =
+        contentDisposition.match(/filename="([^"]+)"/i)?.[1] ??
+        (selected.size === 1 ? "lead.pdf" : "leads.zip");
+      const objectUrl = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 1000);
+      setSelected(new Set());
+    } catch (error) {
+      setDownloadError(
+        error instanceof Error ? error.message : "Could not download selected leads.",
+      );
+    } finally {
+      setDownloadPending(false);
+    }
+  }
+
+  const selectionAction = selected.size > 0 ? (
+    <div
+      className="flex items-center gap-1 sm:gap-1.5"
+      aria-busy={downloadPending}
+    >
+      <button
+        type="button"
+        onClick={() => {
+          setSelected(new Set());
+          setDownloadError(null);
+        }}
+        disabled={downloadPending}
+        className="rounded-lg px-1.5 py-1.5 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-50 sm:px-2 sm:text-xs"
+      >
+        Clear
+      </button>
+      <button
+        type="button"
+        onClick={() => void downloadSelected()}
+        disabled={downloadPending}
+        className="whitespace-nowrap rounded-lg bg-[#0B3D91] px-2 py-1.5 text-[11px] font-semibold text-white transition-colors hover:bg-[#092f70] disabled:cursor-wait disabled:opacity-60 sm:px-3 sm:py-2 sm:text-xs"
+      >
+        {downloadPending
+          ? "Preparing…"
+          : selected.size === 1
+            ? "Download PDF"
+            : `Download ZIP (${selected.size})`}
+      </button>
+    </div>
+  ) : null;
 
   const viewControls = (
     <>
+      {selectionAction}
       <PartnersTableLayoutToggle layout={layout} onLayoutChange={setLayout} />
       <LeadToolbarColumnSettingsButton />
     </>
@@ -123,6 +200,11 @@ export function PartnerLeadsListClient({
           columns={columns}
           sort={sort}
           layout={layout}
+          selected={selected}
+          setSelected={setSelected}
+          downloadPending={downloadPending}
+          downloadError={downloadError}
+          setDownloadError={setDownloadError}
           tableFooter={layout === "table" ? pagination : undefined}
         />
       </LeadListTableShell>
