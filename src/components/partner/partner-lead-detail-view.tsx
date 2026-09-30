@@ -5,8 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { LeadCategoryBadge } from "@/components/leads/lead-category-badge";
 import { PartnerRefundButton } from "@/components/partner/partner-refund-button";
 import { PartnerMarkSoldButton } from "@/components/partner/partner-mark-sold-button";
+import { downloadPartnerLeadFiles } from "@/lib/leads/partner-lead-download-client";
 import { isPartnerRefundAllowed } from "@/lib/refunds/eligibility";
 import { formatDateTimeLong } from "@/lib/format-datetime";
+import { DownloadSimple, ICON_WEIGHT_LINEAR } from "@/lib/icons/client";
 import {
   LeadDetailCompliancePanel,
   LeadDetailContactPanel,
@@ -73,6 +75,26 @@ export function PartnerLeadDetailView({
   partnerSoldAt,
 }: PartnerLeadDetailViewProps) {
   const [tab, setTab] = useState<PartnerTabId>("contact");
+  const [downloadPending, setDownloadPending] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  async function downloadLead() {
+    if (downloadPending) return;
+    setDownloadPending(true);
+    setDownloadError(null);
+    try {
+      await downloadPartnerLeadFiles(
+        [deliveryId],
+        "Could not download this lead.",
+      );
+    } catch (error) {
+      setDownloadError(
+        error instanceof Error ? error.message : "Could not download this lead.",
+      );
+    } finally {
+      setDownloadPending(false);
+    }
+  }
 
   const deliveredLabel = formatDateTimeLong(deliveredAt);
   const subtitleParts = [
@@ -125,16 +147,36 @@ export function PartnerLeadDetailView({
         }
         subtitle={subtitleParts.join(" · ")}
         actions={
-          canRefund || canMarkSold ? (
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              {canMarkSold ? (
-                <PartnerMarkSoldButton deliveryId={deliveryId} />
-              ) : null}
-              {canRefund ? (
-                <PartnerRefundButton leadDeliveryId={deliveryId} />
-              ) : null}
-            </div>
-          ) : undefined
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => void downloadLead()}
+              disabled={downloadPending}
+              aria-busy={downloadPending}
+              className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60"
+            >
+              <DownloadSimple
+                size={14}
+                weight={ICON_WEIGHT_LINEAR}
+                className="shrink-0"
+              />
+              {downloadPending ? "Preparing…" : "Download PDF"}
+            </button>
+            {canMarkSold ? (
+              <PartnerMarkSoldButton deliveryId={deliveryId} />
+            ) : null}
+            {canRefund ? (
+              <PartnerRefundButton leadDeliveryId={deliveryId} />
+            ) : null}
+            {downloadError ? (
+              <p
+                className="basis-full text-right text-xs text-red-600"
+                role="alert"
+              >
+                {downloadError}
+              </p>
+            ) : null}
+          </div>
         }
         kpis={
           <>

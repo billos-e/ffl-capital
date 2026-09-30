@@ -12,6 +12,7 @@ import { PartnersTableLayoutToggle } from "@/components/admin/partners-table-lay
 import { LeadToolbarColumnSettingsButton } from "@/components/leads/lead-table-column-picker-button";
 import { usePortalDataTableLayout } from "@/hooks/use-portal-data-table-layout";
 import { PARTNER_LEADS_TABLE_LAYOUT_KEY } from "@/lib/partner/partner-leads-table-display";
+import { downloadPartnerLeadFiles } from "@/lib/leads/partner-lead-download-client";
 import type { LeadColumnDef } from "@/lib/leads/list-view-columns";
 import type { LeadViewEditorState } from "@/components/leads/lead-view-editor-sheet";
 import { MAX_PARTNER_LEAD_DOWNLOADS } from "@/lib/leads/partner-lead-download-constants";
@@ -85,38 +86,19 @@ export function PartnerLeadsListClient({
   const { layout, setLayout } = usePortalDataTableLayout(PARTNER_LEADS_TABLE_LAYOUT_KEY);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [downloadPending, setDownloadPending] = useState(false);
+  const [downloadPendingId, setDownloadPendingId] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
   async function downloadSelected() {
     if (!selected.size || downloadPending) return;
+    const deliveryIds = [...selected];
     setDownloadPending(true);
     setDownloadError(null);
     try {
-      const response = await fetch("/api/partner/leads/download", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deliveryIds: [...selected] }),
-      });
-      if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as
-          | { error?: string }
-          | null;
-        throw new Error(body?.error || "Could not download selected leads.");
-      }
-
-      const blob = await response.blob();
-      const contentDisposition = response.headers.get("Content-Disposition") ?? "";
-      const filename =
-        contentDisposition.match(/filename="([^"]+)"/i)?.[1] ??
-        (selected.size === 1 ? "lead.pdf" : "leads.zip");
-      const objectUrl = window.URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = objectUrl;
-      anchor.download = filename;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 1000);
+      await downloadPartnerLeadFiles(
+        deliveryIds,
+        "Could not download selected leads.",
+      );
       setSelected(new Set());
     } catch (error) {
       setDownloadError(
@@ -124,6 +106,26 @@ export function PartnerLeadsListClient({
       );
     } finally {
       setDownloadPending(false);
+    }
+  }
+
+  async function downloadDelivery(deliveryId: string) {
+    if (downloadPending) return;
+    setDownloadPending(true);
+    setDownloadPendingId(deliveryId);
+    setDownloadError(null);
+    try {
+      await downloadPartnerLeadFiles(
+        [deliveryId],
+        "Could not download this lead.",
+      );
+    } catch (error) {
+      setDownloadError(
+        error instanceof Error ? error.message : "Could not download this lead.",
+      );
+    } finally {
+      setDownloadPending(false);
+      setDownloadPendingId(null);
     }
   }
 
@@ -203,6 +205,8 @@ export function PartnerLeadsListClient({
           selected={selected}
           setSelected={setSelected}
           downloadPending={downloadPending}
+          downloadPendingId={downloadPendingId}
+          onDownloadLead={(deliveryId) => void downloadDelivery(deliveryId)}
           downloadError={downloadError}
           setDownloadError={setDownloadError}
           tableFooter={layout === "table" ? pagination : undefined}

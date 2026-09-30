@@ -11,6 +11,7 @@ import {
   DotsThreeVertical,
   Eye,
   Wallet,
+  DownloadSimple,
   ICON_WEIGHT_LINEAR,
 } from "@/lib/icons/client";
 import { formatDateTime } from "@/lib/format-datetime";
@@ -89,16 +90,22 @@ function PartnerLeadRefundDialog({
 function RowMenu({
   delivery,
   onRefund,
+  onDownload,
+  downloadPending,
+  isDownloading,
   layout,
 }: {
   delivery: DeliveryRow;
   onRefund: () => void;
+  onDownload: () => void;
+  downloadPending: boolean;
+  isDownloading: boolean;
   layout: PortalDataTableLayout;
 }) {
   const { push } = useNavigateWithPending();
   const [open, setOpen] = useState(false);
   const closeMenu = useCallback(() => setOpen(false), []);
-  const menuItemCount = 1 + (delivery.canRefund ? 1 : 0);
+  const menuItemCount = 2 + (delivery.canRefund ? 1 : 0);
   const { buttonRef, menuRef, menuStyle } = usePortalAnchoredMenu({
     open,
     onClose: closeMenu,
@@ -141,6 +148,23 @@ function RowMenu({
           View lead
         </button>
 
+        <button
+          type="button"
+          disabled={downloadPending}
+          className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60"
+          onClick={() => {
+            setOpen(false);
+            onDownload();
+          }}
+        >
+          <DownloadSimple
+            size={14}
+            weight={ICON_WEIGHT_LINEAR}
+            className="shrink-0 text-slate-400"
+          />
+          {isDownloading ? "Preparing…" : "Download PDF"}
+        </button>
+
         {delivery.canRefund && (
           <button
             type="button"
@@ -171,6 +195,8 @@ export function PartnerLeadsTable({
   selected,
   setSelected,
   downloadPending,
+  downloadPendingId,
+  onDownloadLead,
   downloadError,
   setDownloadError,
   tableFooter,
@@ -186,6 +212,8 @@ export function PartnerLeadsTable({
   selected: Set<string>;
   setSelected: Dispatch<SetStateAction<Set<string>>>;
   downloadPending: boolean;
+  downloadPendingId: string | null;
+  onDownloadLead: (deliveryId: string) => void;
   downloadError: string | null;
   setDownloadError: Dispatch<SetStateAction<string | null>>;
   tableFooter?: React.ReactNode;
@@ -451,13 +479,14 @@ export function PartnerLeadsTable({
             )}
             onClick={(e) => e.stopPropagation()}
           >
-            {d.canRefund ? (
-              <RowMenu
-                delivery={d}
-                layout={layout}
-                onRefund={() => setRefundDialogId(d.id)}
-              />
-            ) : null}
+            <RowMenu
+              delivery={d}
+              layout={layout}
+              onRefund={() => setRefundDialogId(d.id)}
+              onDownload={() => onDownloadLead(d.id)}
+              downloadPending={downloadPending}
+              isDownloading={downloadPendingId === d.id}
+            />
           </td>
         );
       default:
