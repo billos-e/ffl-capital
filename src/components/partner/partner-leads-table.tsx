@@ -162,7 +162,7 @@ function RowMenu({
             weight={ICON_WEIGHT_LINEAR}
             className="shrink-0 text-slate-400"
           />
-          {isDownloading ? "Preparing…" : "Download PDF"}
+          {isDownloading ? "Preparing…" : "Download CSV"}
         </button>
 
         {delivery.canRefund && (

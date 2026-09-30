@@ -12,7 +12,7 @@ import { PartnersTableLayoutToggle } from "@/components/admin/partners-table-lay
 import { LeadToolbarColumnSettingsButton } from "@/components/leads/lead-table-column-picker-button";
 import { usePortalDataTableLayout } from "@/hooks/use-portal-data-table-layout";
 import { PARTNER_LEADS_TABLE_LAYOUT_KEY } from "@/lib/partner/partner-leads-table-display";
-import { downloadPartnerLeadFiles } from "@/lib/leads/partner-lead-download-client";
+import { downloadPartnerLeadsCsv } from "@/lib/leads/partner-lead-csv-client";
 import type { LeadColumnDef } from "@/lib/leads/list-view-columns";
 import type { LeadViewEditorState } from "@/components/leads/lead-view-editor-sheet";
 import { MAX_PARTNER_LEAD_DOWNLOADS } from "@/lib/leads/partner-lead-download-constants";
@@ -95,7 +95,7 @@ export function PartnerLeadsListClient({
     setDownloadPending(true);
     setDownloadError(null);
     try {
-      await downloadPartnerLeadFiles(
+      await downloadPartnerLeadsCsv(
         deliveryIds,
         "Could not download selected leads.",
       );
@@ -115,7 +115,7 @@ export function PartnerLeadsListClient({
     setDownloadPendingId(deliveryId);
     setDownloadError(null);
     try {
-      await downloadPartnerLeadFiles(
+      await downloadPartnerLeadsCsv(
         [deliveryId],
         "Could not download this lead.",
       );
@@ -154,8 +154,8 @@ export function PartnerLeadsListClient({
         {downloadPending
           ? "Preparing…"
           : selected.size === 1
-            ? "Download PDF"
-            : `Download ZIP (${selected.size})`}
+            ? "Download CSV"
+            : `Download CSV (${selected.size})`}
       </button>
     </div>
   ) : null;

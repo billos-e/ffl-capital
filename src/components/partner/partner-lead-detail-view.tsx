@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { LeadCategoryBadge } from "@/components/leads/lead-category-badge";
 import { PartnerRefundButton } from "@/components/partner/partner-refund-button";
 import { PartnerMarkSoldButton } from "@/components/partner/partner-mark-sold-button";
-import { downloadPartnerLeadFiles } from "@/lib/leads/partner-lead-download-client";
+import { downloadPartnerLeadsCsv } from "@/lib/leads/partner-lead-csv-client";
 import { isPartnerRefundAllowed } from "@/lib/refunds/eligibility";
 import { formatDateTimeLong } from "@/lib/format-datetime";
 import { DownloadSimple, ICON_WEIGHT_LINEAR } from "@/lib/icons/client";
@@ -83,7 +83,7 @@ export function PartnerLeadDetailView({
     setDownloadPending(true);
     setDownloadError(null);
     try {
-      await downloadPartnerLeadFiles(
+      await downloadPartnerLeadsCsv(
         [deliveryId],
         "Could not download this lead.",
       );
@@ -160,7 +160,7 @@ export function PartnerLeadDetailView({
                 weight={ICON_WEIGHT_LINEAR}
                 className="shrink-0"
               />
-              {downloadPending ? "Preparing…" : "Download PDF"}
+              {downloadPending ? "Preparing…" : "Download CSV"}
             </button>
             {canMarkSold ? (
               <PartnerMarkSoldButton deliveryId={deliveryId} />
