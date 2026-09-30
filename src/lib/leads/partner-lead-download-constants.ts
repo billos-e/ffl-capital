@@ -1,0 +1,1 @@
+export const MAX_PARTNER_LEAD_DOWNLOADS = 100;
